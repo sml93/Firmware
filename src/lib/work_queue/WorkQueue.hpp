@@ -33,6 +33,7 @@
 
 #pragma once
 
+#include "WorkQueueManager.hpp"
 
 #include <containers/List.hpp>
 #include <containers/Queue.hpp>
@@ -51,7 +52,7 @@ class WorkQueue : public ListNode<WorkQueue *>
 
 public:
 
-	WorkQueue(const char *name);
+	WorkQueue(WorkQueueManager &manager, const char *name);
 	~WorkQueue();
 
 	const char *name() { return _name; }
@@ -60,9 +61,10 @@ public:
 
 	void process();
 
-	void set_task_id(px4_task_t task_id) { _task_id = task_id; }
-
 private:
+
+	WorkQueueManager &_manager;
+	const char *_name;
 
 #ifdef __PX4_NUTTX
 	void work_lock() { _flags = enter_critical_section(); }
@@ -76,20 +78,8 @@ private:
 
 	px4_sem_t _process_lock;
 
-	const char *_name{nullptr};
-
-	px4_task_t	_task_id{-1};
-
 	Queue<WorkItem *>	_q;
 
 };
-
-
-// list of all px4 work queues
-extern pthread_mutex_t px4_work_queues_list_mutex;
-extern List<WorkQueue *> px4_work_queues_list;
-
-
-WorkQueue *work_queue_create(const char *name, uint8_t priority, int stacksize);
 
 } // namespace px4
